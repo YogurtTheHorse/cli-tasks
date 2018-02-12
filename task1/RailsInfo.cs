@@ -1,4 +1,5 @@
-﻿using System;
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using task1.Readers;
@@ -55,6 +56,7 @@ namespace task1 {
 
             if (checkTo >= blocks.Count || checkTo <= checkFrom) {
                 Console.WriteLine($"To must be greater than {checkFrom - 1} and less than {blocks.Count + 1}");
+                return false;
             }
 
             Console.Write("Result: ");
