@@ -91,7 +91,7 @@ namespace task1 {
                 return false;
             }
 
-            if (signalNumber >= blocks.Count || signalNumber < 1) {
+            if (signalNumber > blocks.Count || signalNumber < 1) {
                 Console.WriteLine($"Signal number must be greater than 0 and less than {blocks.Count + 1}");
                 return false;
             }
