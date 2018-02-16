@@ -1,4 +1,4 @@
-String﻿using System;
+using System;
 
 namespace task1 {
     public struct RailsInfoParseResult {
