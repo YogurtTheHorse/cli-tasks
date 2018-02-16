@@ -10,11 +10,7 @@ namespace task1 {
         private IReader<int> intReader;
         private IReader<BlockState> blocksReader;
 
-        public int BlocksCount {
-            get {
-                return blocks.Count;
-            }
-        }
+        public int BlocksCount => blocks.Count;
 
         public RailsInfo(IReader<int> intReader, IReader<BlockState> blocksReader) {
             this.intReader = intReader;
