@@ -1,4 +1,4 @@
-﻿using System;
+String﻿using System;
 
 namespace task1 {
     public struct RailsInfoParseResult {
@@ -23,7 +23,7 @@ namespace task1 {
 
         public bool IsSuccess {
             get {
-                return Error == null || Error == "";
+                return String.IsNullOrEmpty(Error);
             }
         }
 
