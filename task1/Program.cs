@@ -15,26 +15,7 @@ namespace task1 {
                 return;
             }
 
-            RailsInfo railsInfo = res.Info;
-
-            var mainMenu = new Menu.Menu("Menu", consoleIntParser);
-            mainMenu.AddMenuItem(new MenuItem() {
-                Label = "Check",
-                Action = railsInfo.Check
-            });
-            mainMenu.AddMenuItem(new MenuItem() {
-                Label = "View state",
-                Action = railsInfo.ViewState
-            });
-            mainMenu.AddMenuItem(new MenuItem() {
-                Label = "Change signal",
-                Action = railsInfo.ChangeSignal
-            });
-            mainMenu.AddMenuItem(new MenuItem() {
-                Label = "Exit",
-                Action = () => { return false; }
-            });
-
+            var mainMenu = new FirstTaskMenu(consoleIntParser, new ConsoleBlockStateReader(), res.Info);
             mainMenu.Open();
         }
     }

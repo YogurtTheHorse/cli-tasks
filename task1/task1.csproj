@@ -43,6 +43,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BlockState.cs" />
+    <Compile Include="Menu\FirstTaskMenu.cs" />
     <Compile Include="Readers\ConsoleBlockStateReader.cs" />
     <Compile Include="Readers\ConsoleIntReader.cs" />
     <Compile Include="Readers\IReader.cs" />

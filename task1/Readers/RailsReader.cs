@@ -11,7 +11,7 @@
         }
 
         public RailsInfoParseResult ReadRailsInfo() {
-            RailsInfo railsInfo = new RailsInfo(_intReader, _blocksReader);
+            RailsInfo railsInfo = new RailsInfo();
 
             if (!_intReader.Read("Blocks count: ", out int blocksCount)) {
                 return new RailsInfoParseResult() {

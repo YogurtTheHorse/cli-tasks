@@ -1,7 +1,7 @@
 ﻿using System;
 
 namespace task1.Readers {
-    internal class ConsoleBlockStateReader : IReader<BlockState> {
+    public class ConsoleBlockStateReader : IReader<BlockState> {
         public bool Read(string message, out BlockState res) {
             Console.Write(message);
 

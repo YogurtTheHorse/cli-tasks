@@ -4,19 +4,19 @@ using task1.Readers;
 
 namespace task1.Menu {
     public class Menu {
-        private string _menuLabel;
-        private List<MenuItem> items;
-        private IReader<int> _intReader;
+        protected string _menuLabel;
+        protected List<MenuItem> _items;
+        protected IReader<int> _intReader;
 
         public Menu(string menuLabel, IReader<int> intReader) {
             _menuLabel = menuLabel;
             _intReader = intReader; 
 
-            items = new List<MenuItem>();
+            _items = new List<MenuItem>();
         }
 
         public void AddMenuItem(MenuItem item) {
-            items.Add(item);
+            _items.Add(item);
         }
 
         public void Open() {
@@ -24,20 +24,20 @@ namespace task1.Menu {
             do {
                 Console.WriteLine(_menuLabel);
 
-                for (int i = 0; i < items.Count; ++i) {
-                    Console.WriteLine($"{i + 1}. {items[i].Label}");
+                for (int i = 0; i < _items.Count; ++i) {
+                    Console.WriteLine($"{i + 1}. {_items[i].Label}");
                 }
 
                 if (!_intReader.Read("> ", out res)) {
                     return;
                 }
 
-                if (res < 0 || res > items.Count) {
+                if (res < 0 || res > _items.Count) {
                     Console.WriteLine("No such item.");
                     return;
                 }
 
-            } while (items[res - 1].Action());
+            } while (_items[res - 1].Action());
         }
     }
 }
