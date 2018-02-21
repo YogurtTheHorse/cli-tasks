@@ -4,13 +4,13 @@ using task1.Readers;
 
 namespace task1.Menu {
     public class Menu {
-        private string menuLabel;
+        private string _menuLabel;
         private List<MenuItem> items;
-        private IReader<int> intReader;
+        private IReader<int> _intReader;
 
         public Menu(string menuLabel, IReader<int> intReader) {
-            this.menuLabel = menuLabel;
-            this.intReader = intReader; 
+            _menuLabel = menuLabel;
+            _intReader = intReader; 
 
             items = new List<MenuItem>();
         }
@@ -22,13 +22,13 @@ namespace task1.Menu {
         public void Open() {
             int res;
             do {
-                Console.WriteLine(menuLabel);
+                Console.WriteLine(_menuLabel);
 
                 for (int i = 0; i < items.Count; ++i) {
                     Console.WriteLine($"{i + 1}. {items[i].Label}");
                 }
 
-                if (!intReader.Read("> ", out res)) {
+                if (!_intReader.Read("> ", out res)) {
                     return;
                 }
 
