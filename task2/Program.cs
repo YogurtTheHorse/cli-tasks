@@ -10,7 +10,7 @@ namespace task2 {
         private static ConsoleIntReader _consoleIntParser;
 
         public static void Main(string[] args) {
-            XmlRailsSerializer serializer = new XmlRailsSerializer();
+            IRailsSerializer serializer = new JSONRailsSerializer();
             _consoleIntParser = new ConsoleIntReader();
 
             Console.Write("Specify rails file (<Enter> to read from keyboard): ");
