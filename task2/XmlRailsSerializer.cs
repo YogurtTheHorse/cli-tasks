@@ -1,9 +1,9 @@
 ﻿using System.IO;
 using System.Xml.Serialization;
 
-using task1;
+using Task1;
 
-namespace task2 {
+namespace Task2 {
     public class XmlRailsSerializer : IRailsSerializer {
         private XmlSerializer _serializer;
 

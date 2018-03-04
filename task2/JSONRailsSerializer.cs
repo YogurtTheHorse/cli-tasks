@@ -1,8 +1,8 @@
 ﻿using Newtonsoft.Json;
 using System.IO;
-using task1;
+using Task1;
 
-namespace task2 {
+namespace Task2 {
     public class JSONRailsSerializer : IRailsSerializer {
         private JsonSerializer _jsonSerializer;
 

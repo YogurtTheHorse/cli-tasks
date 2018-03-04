@@ -1,6 +1,6 @@
-﻿using task1;
+﻿using Task1;
 
-namespace task2 {
+namespace Task2 {
     public interface IRailsSerializer {
         RailsInfo DeserializeRails(string path);
         bool TryDeserializeRails(string path, out RailsInfo rails);
