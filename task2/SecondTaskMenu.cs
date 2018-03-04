@@ -1,15 +1,15 @@
 ﻿using System;
 
-using task1;
-using task1.Menu;
-using task1.Readers;
+using Task1;
+using Task1.Menu;
+using Task1.TasksIO;
 
-namespace task2.Menus {
+namespace Task2.Menus {
     public class SecondTaskMenu : FirstTaskMenu {
         private IRailsSerializer _serializer;
 
-        public SecondTaskMenu(IReader<int> intReader, IReader<BlockState> blocksReader, RailsInfo railsInfo, IRailsSerializer serializer) :
-            base(intReader, blocksReader, railsInfo) {
+        public SecondTaskMenu(TaskIO taskIO, RailsInfo railsInfo, IRailsSerializer serializer) :
+            base(taskIO, railsInfo) {
 
             _menuLabel = "SecondTaskMenu";
             _serializer = serializer;

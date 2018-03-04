@@ -1,6 +1,6 @@
 using System;
 
-namespace task1 {
+namespace Task1 {
     public struct RailsInfoParseResult {
         private RailsInfo _info;
 

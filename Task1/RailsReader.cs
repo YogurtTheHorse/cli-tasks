@@ -1,19 +1,19 @@
-﻿namespace task1.Readers {
+﻿using Task1.TasksIO;
+
+namespace Task1 {
     public class RailsReader {
-        private IReader<int> _intReader;
-        private IReader<BlockState> _blocksReader;
+        private TaskIO _taskIO;
 
         public int BlockCount { get; protected set; }
 
-        public RailsReader(IReader<int> intReader, IReader<BlockState> blocksReader) {
-            _intReader = intReader;
-            _blocksReader = blocksReader;
+        public RailsReader(TaskIO taskIO) {
+			_taskIO = taskIO;
         }
 
         public RailsInfoParseResult ReadRailsInfo() {
             RailsInfo railsInfo = new RailsInfo();
 
-            if (!_intReader.Read("Blocks count: ", out int blocksCount)) {
+            if (!_taskIO.ReadInteger("Blocks count: ", out int blocksCount)) {
                 return new RailsInfoParseResult() {
                     Error = "Couldn't read blocks count"
                 };
@@ -28,7 +28,7 @@
             BlockCount = blocksCount;
 
             for (int i = 0; i < blocksCount; ++i) {
-                if (!_blocksReader.Read($"Block {i + 1} state (R/Y/G): ", out BlockState state)) {
+                if (!_taskIO.ReadBlock($"Block {i + 1} state (R/Y/G): ", out BlockState state)) {
                     return new RailsInfoParseResult() {
                         Error = $"Couldn't read {i + 1} block."
                     };

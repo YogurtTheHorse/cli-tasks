@@ -1,17 +1,15 @@
 ﻿using System;
-using task1;
+using Task1;
+using Task1.TasksIO;
+using Task2.Menus;
 
-using task1.Readers;
-using task2.Menus;
-
-namespace task2 {
+namespace Task2 {
     public class Program {
         private static RailsInfo _railsInfo;
-        private static ConsoleIntReader _consoleIntParser;
-
+		private static TaskIO _taskIO;
+        
         public static void Main(string[] args) {
             IRailsSerializer serializer = new JSONRailsSerializer();
-            _consoleIntParser = new ConsoleIntReader();
 
             Console.Write("Specify rails file (<Enter> to read from keyboard): ");
             string path = Console.ReadLine();
@@ -22,12 +20,14 @@ namespace task2 {
                 return;
             }
 
-            var mainMenu = new SecondTaskMenu(_consoleIntParser, new ConsoleBlockStateReader(), _railsInfo, serializer);
+			_taskIO = new ConsoleTaskIO();
+
+			var mainMenu = new SecondTaskMenu(_taskIO, _railsInfo, serializer);
             mainMenu.Open();
         }
 
         private static void ReadRailFromConsole() {
-            RailsReader railsParser = new RailsReader(_consoleIntParser, new ConsoleBlockStateReader());
+            RailsReader railsParser = new RailsReader(_taskIO);
             RailsInfoParseResult res = railsParser.ReadRailsInfo();
 
             if (!res.IsSuccess) {

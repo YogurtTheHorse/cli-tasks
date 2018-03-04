@@ -1,12 +1,12 @@
 ﻿using System;
-using task1.Menu;
-using task1.Readers;
+using Task1.Menu;
+using Task1.TasksIO;
 
-namespace task1 {
+namespace Task1 {
     public class Program {
         public static void Main(string[] args) {
-            ConsoleIntReader consoleIntParser = new ConsoleIntReader();
-            RailsReader railsParser = new RailsReader(consoleIntParser, new ConsoleBlockStateReader());
+            TaskIO io = new ConsoleTaskIO();
+            RailsReader railsParser = new RailsReader(io);
             RailsInfoParseResult res = railsParser.ReadRailsInfo();
 
             if (!res.IsSuccess) {
@@ -15,8 +15,9 @@ namespace task1 {
                 return;
             }
 
-            var mainMenu = new FirstTaskMenu(consoleIntParser, new ConsoleBlockStateReader(), res.Info);
+            var mainMenu = new FirstTaskMenu(io, res.Info);
             mainMenu.Open();
+            Console.ReadLine();
         }
     }
 }

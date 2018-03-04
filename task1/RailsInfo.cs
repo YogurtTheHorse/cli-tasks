@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace task1 {
+namespace Task1 {
     public class RailsInfo {
         public List<BlockState> Blocks;
         public int BlocksCount => Blocks.Count;

@@ -1,17 +1,13 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using task1.Readers;
+using Task1.TasksIO;
 
-namespace task1.Menu {
+namespace Task1.Menu {
     public class FirstTaskMenu : Menu {
-        protected IReader<BlockState> _blocksReader;
         protected RailsInfo _railsInfo;
 
-        public FirstTaskMenu(IReader<int> intReader, IReader<BlockState> blocksReader, RailsInfo railsInfo) : base("FirstMenuTask", intReader) {
-            _blocksReader = blocksReader;
+        public FirstTaskMenu(TaskIO taskIO, RailsInfo railsInfo) : base("FirstMenuTask", taskIO) {
+			_taskIO = taskIO;
             _railsInfo = railsInfo;
 
             InitializeMenuItems();
@@ -42,7 +38,7 @@ namespace task1.Menu {
                 return true;
             }
 
-            if (!_intReader.Read("From: ", out int checkFrom)) {
+            if (!_taskIO.ReadInteger("From: ", out int checkFrom)) {
                 return false;
             }
 
@@ -51,7 +47,7 @@ namespace task1.Menu {
                 return false;
             }
 
-            if (!_intReader.Read("To: ", out int checkTo)) {
+            if (!_taskIO.ReadInteger("To: ", out int checkTo)) {
                 return false;
             }
 
@@ -90,7 +86,7 @@ namespace task1.Menu {
                 return true;
             }
 
-            if (!_intReader.Read("Signal number: ", out int signalNumber)) {
+            if (!_taskIO.ReadInteger("Signal number: ", out int signalNumber)) {
                 return false;
             }
 
@@ -99,7 +95,7 @@ namespace task1.Menu {
                 return false;
             }
 
-            if (!_blocksReader.Read("New block: ", out BlockState newState)) {
+            if (!_taskIO.ReadBlock("New block: ", out BlockState newState)) {
                 return false;
             }
 

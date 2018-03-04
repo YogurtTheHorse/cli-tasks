@@ -1,4 +1,4 @@
-﻿namespace task1 {
+﻿namespace Task1 {
     public enum BlockState {
         Incorrect = -1,
         Red = 0,

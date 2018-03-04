@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace task1.Menu {
+namespace Task1.Menu {
     public struct MenuItem {
         public string Label;
         public Func<bool> Action;

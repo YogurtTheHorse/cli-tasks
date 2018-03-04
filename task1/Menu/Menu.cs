@@ -1,16 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
-using task1.Readers;
+using Task1.TasksIO;
 
-namespace task1.Menu {
+namespace Task1.Menu {
     public class Menu {
         protected string _menuLabel;
         protected List<MenuItem> _items;
-        protected IReader<int> _intReader;
+        protected TaskIO _taskIO;
 
-        public Menu(string menuLabel, IReader<int> intReader) {
+        public Menu(string menuLabel, TaskIO taskIO) {
             _menuLabel = menuLabel;
-            _intReader = intReader; 
+			_taskIO = taskIO;
 
             _items = new List<MenuItem>();
         }
@@ -22,18 +22,18 @@ namespace task1.Menu {
         public void Open() {
             int res;
             do {
-                Console.WriteLine(_menuLabel);
+				_taskIO.WriteLine(_menuLabel);
 
                 for (int i = 0; i < _items.Count; ++i) {
-                    Console.WriteLine($"{i + 1}. {_items[i].Label}");
+                    _taskIO.WriteLine($"{i + 1}. {_items[i].Label}");
                 }
 
-                if (!_intReader.Read("> ", out res)) {
+                if (!_taskIO.ReadInteger("> ", out res)) {
                     return;
                 }
 
                 if (res < 0 || res > _items.Count) {
-                    Console.WriteLine("No such item.");
+					_taskIO.WriteLine("No such item.");
                     return;
                 }
 
