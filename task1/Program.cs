@@ -10,8 +10,8 @@ namespace Task1 {
             RailsInfoParseResult res = railsParser.ReadRailsInfo();
 
             if (!res.IsSuccess) {
-                Console.WriteLine(res.Error);
-                Console.ReadLine();
+                io.WriteLine(res.Error);
+                io.ReadLine();
                 return;
             }
 
