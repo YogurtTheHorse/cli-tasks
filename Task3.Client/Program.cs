@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Threading;
 using Task3.ShareCode;
 
 namespace Task3.Client {
@@ -9,13 +8,10 @@ namespace Task3.Client {
 			io.OnImcomingTextMessage += (s, e) => Console.Write(e.Message);
 
 			io.StartListeningAsync();
-			//io.Write("spam", NetworkMessageType.Status);
 
 			while (io.IsListening) {
 				io.WriteLine(Console.ReadLine());
 			}
-
-			Console.ReadLine();
 		}
 	}
 }
