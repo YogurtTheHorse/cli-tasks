@@ -34,7 +34,7 @@ namespace Task1.Menu {
 
         public bool Check() {
             if (_railsInfo.Blocks.Count == 0) {
-                Console.WriteLine("No blocks found");
+                _taskIO.WriteLine("No blocks found");
                 return true;
             }
 
@@ -43,7 +43,7 @@ namespace Task1.Menu {
             }
 
             if (checkFrom >= _railsInfo.Blocks.Count || checkFrom < 1) {
-                Console.WriteLine($"From must be greater than 0 and less than {_railsInfo.Blocks.Count + 1}");
+				_taskIO.WriteLine($"From must be greater than 0 and less than {_railsInfo.Blocks.Count + 1}");
                 return false;
             }
 
@@ -52,37 +52,37 @@ namespace Task1.Menu {
             }
 
             if (checkTo >= _railsInfo.Blocks.Count || checkTo <= checkFrom) {
-                Console.WriteLine($"To must be greater than {checkFrom - 1} and less than {_railsInfo.Blocks.Count + 1}");
+				_taskIO.WriteLine($"To must be greater than {checkFrom - 1} and less than {_railsInfo.Blocks.Count + 1}");
                 return false;
             }
 
-            Console.Write("Result: ");
+			_taskIO.Write("Result: ");
 
             for (int i = checkFrom; i <= checkTo; i++) {
                 if (_railsInfo.Blocks[i - 1] == BlockState.Red) {
-                    Console.WriteLine($"{i} block closed");
+					_taskIO.WriteLine($"{i} block closed");
                     return true;
                 }
             }
 
-            Console.WriteLine("way is open");
+			_taskIO.WriteLine("way is open");
 
             return true;
         }
 
         public bool ViewState() {
             if (_railsInfo.Blocks.Count == 0) {
-                Console.WriteLine("No blocks found");
+				_taskIO.WriteLine("No blocks found");
                 return true;
             } else {
-                Console.WriteLine($"Rall path state: {String.Join("-", from block in _railsInfo.Blocks select block.ToString()[0])}");
+				_taskIO.WriteLine($"Rall path state: {String.Join("-", from block in _railsInfo.Blocks select block.ToString()[0])}");
                 return true;
             }
         }
 
         public bool ChangeSignal() {
             if (_railsInfo.Blocks.Count == 0) {
-                Console.WriteLine("No blocks found");
+				_taskIO.WriteLine("No blocks found");
                 return true;
             }
 
@@ -91,7 +91,7 @@ namespace Task1.Menu {
             }
 
             if (signalNumber > _railsInfo.Blocks.Count || signalNumber < 1) {
-                Console.WriteLine($"Signal number must be greater than 0 and less than {_railsInfo.Blocks.Count + 1}");
+				_taskIO.WriteLine($"Signal number must be greater than 0 and less than {_railsInfo.Blocks.Count + 1}");
                 return false;
             }
 
