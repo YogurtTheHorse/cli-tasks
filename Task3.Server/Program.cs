@@ -10,19 +10,18 @@ namespace Task3.Server {
 			TaskIO io = new UDPTaskIO("127.0.0.1", NetUtils.ServerPort, NetUtils.ClientPort);
 			
 			io.StartListeningAsync();
-			
+
 			RailsReader railsParser = new RailsReader(io);
 			RailsInfoParseResult res = railsParser.ReadRailsInfo();
 
-			if (!res.IsSuccess) {
+			if (res.IsSuccess) {
+				var mainMenu = new FirstTaskMenu(io, res.Info);
+				mainMenu.Open();
+			} else {
 				io.WriteLine(res.Error);
-				io.ReadLine();
-				return;
 			}
 
-			var mainMenu = new FirstTaskMenu(io, res.Info);
-			mainMenu.Open();
-			Console.ReadLine();
+			io.Stop();
 		}
 	}
 }
