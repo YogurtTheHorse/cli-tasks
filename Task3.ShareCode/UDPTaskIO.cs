@@ -63,8 +63,6 @@ namespace Task3.ShareCode {
 		private EndPoint _receiverEndpoint;
 		private int _portToReceive;
 
-		private string _lineBuffer;
-
 		/// <summary>
 		/// Stores part of hash if it was delivered in seperated.
 		/// </summary>
@@ -88,8 +86,6 @@ namespace Task3.ShareCode {
 
 			_hashBuffer = new byte[NetUtils.HashBytes.Length];
 			_firstFourBytesRecieved = false;
-
-			_lineBuffer = "";
 		}
 
 		private void CheckForConnection() {
