@@ -10,6 +10,40 @@ using System.Linq;
 using System.Net;
 
 namespace Task3.ShareCode {
+	/// <remarks>
+	/// In this realization every message could be divided on many UDP diagrams.
+	/// Every diagram will be readean as it's big diagram stream and we are reading it
+	/// endlessly. Message contains two parts: header and data.
+	/// Header starts <see cref="NetUtils.HashBytes"/> for checking message start.
+	/// <see cref="UDPTaskIO"/> will skip everything between previos message until hash
+	/// will be found.
+	/// 
+	/// After hash goes 1 byte of <see cref="NetworkMessageType"/>. Status messages could 
+	/// be just text messages or <see cref="NetUtils.DisconnectStatusMessage"/> if 
+	/// endpoint stopped work.
+	/// 
+	/// Next goes 4 bytes of message length that should be converted to Int32. We will 
+	/// call it N.
+	/// Next N bytes goes UTF8 encoded message
+	/// 
+	/// If text is longer than <see cref="NetUtils.MaxTextLength"/> it will be 
+	/// divided.
+	/// 
+	/// Max message length is <see cref="NetUtils.MaxMessageLength"/>.
+	/// 
+	/// Table, that describes message content
+	/// * ---------------------------------------------------------------------- *
+	/// |  Part  |   Segment    |    Length (in bytes)   |   Short description   |
+	/// | ------ | ------------ | ---------------------- | --------------------- |
+	/// |        |     Hash     | Speciefied in NetUtils | Defines message start |
+	/// |        | ------------ | ---------------------- | --------------------- |
+	/// | Header | Message Type |           1            | Status/Text           |
+	/// |        | ------------ | ---------------------- | --------------------- |
+	/// |        | Data length  |           4            | Length of data part   |
+	/// | ------ | ------------ | ---------------------- | --------------------- |
+	/// |  Data  |     Data     | Speciefed in header    | UTF8 decoded string   |
+	/// * ---------------------------------------------------------------------- *
+	/// </remarks>
 	public class UDPTaskIO : TaskIO {
 		public bool IsListening { get; private set; }
 
@@ -28,6 +62,8 @@ namespace Task3.ShareCode {
 
 		private EndPoint _receiverEndpoint;
 		private int _portToReceive;
+
+		private string _lineBuffer;
 
 		/// <summary>
 		/// Stores part of hash if it was delivered in seperated.
@@ -52,6 +88,8 @@ namespace Task3.ShareCode {
 
 			_hashBuffer = new byte[NetUtils.HashBytes.Length];
 			_firstFourBytesRecieved = false;
+
+			_lineBuffer = "";
 		}
 
 		private void CheckForConnection() {
@@ -81,7 +119,7 @@ namespace Task3.ShareCode {
 						Array.Copy(temp, _hashBuffer, temp.Length);
 					} else {
 						if (ReceiveData(_hashBuffer) != _hashBuffer.Length) {
-							// TODO: Exception.
+							throw new InvalidOperationException("Couln't read message from socket.");
 						}
 
 						_firstFourBytesRecieved = true;
@@ -94,8 +132,8 @@ namespace Task3.ShareCode {
 			}
 		}
 
-
 		public void Stop() {
+			Write(NetUtils.DisconnectStatusMessage, NetworkMessageType.Status);
 			IsListening = false;
 		}
 
@@ -113,11 +151,16 @@ namespace Task3.ShareCode {
 			string message = Encoding.UTF8.GetString(convertedMessage);
 			NetworkMessageType messageType = (NetworkMessageType)convertedMessageType[0];
 
-			IncomingMessageEventArgs incomingMessageEventArgs = new IncomingMessageEventArgs(message, messageType);
+			var incomingMessageEventArgs = new IncomingMessageEventArgs(message, messageType);
 
 			switch (messageType) {
 				case NetworkMessageType.Status:
 					OnImcomingStatusMessage?.Invoke(this, incomingMessageEventArgs);
+					
+					if (message == NetUtils.DisconnectStatusMessage) {
+						Stop();
+					}
+					
 					break;
 				case NetworkMessageType.Text:
 					_recievedMessages.Enqueue(message);
@@ -129,41 +172,57 @@ namespace Task3.ShareCode {
 		}
 
 		public override string ReadLine() {
-			while (_recievedMessages.IsEmpty) {
-				_messagesQueueUpdated.WaitOne();
+			string lineBuffer = "";
+			int newLineIndex;
+
+			while ((newLineIndex = lineBuffer.IndexOf('\n')) == -1) {
+				while (_recievedMessages.IsEmpty) {
+					_messagesQueueUpdated.WaitOne();
+				}
+
+				_recievedMessages.TryDequeue(out string message);
+				lineBuffer += message;
 			}
 
-			_recievedMessages.TryDequeue(out string result);
 
-			return result.TrimEnd('\n');
+			return lineBuffer.Substring(0, newLineIndex);
 		}
 
 		public override void Write(string s) {
 			Write(s, NetworkMessageType.Text);
 		}
 
-		public void Write(string s, NetworkMessageType messageType) {
-			byte[]
-				convertedMessageType = new byte[] { (byte)messageType },
+		public void Write(string message, NetworkMessageType messageType) {
+			if (messageType == NetworkMessageType.Status && message.Length > NetUtils.MaxTextLength) {
+				throw new InvalidOperationException($"Status message can't be longer that {NetUtils.MaxTextLength}");
+			}
 
-				convertedMessage = Encoding.UTF8.GetBytes(s),
-				convertedMessageLength = BitConverter.GetBytes(convertedMessage.Length);
+			lock (_writingLock) {
+				for (int i = 0; i < message.Length; i += NetUtils.MaxTextLength) {
+					int partLength = Math.Min(NetUtils.MaxTextLength, message.Length - i);
+					string messagePart = message.Substring(i, partLength);
 
-			int length = NetUtils.HashBytes.Length +
-						convertedMessage.Length +
-						convertedMessageType.Length +
-						convertedMessageLength.Length;
+					byte[]
+						convertedMessageType = new byte[] { (byte)messageType },
+						convertedMessage = Encoding.UTF8.GetBytes(messagePart),
+						convertedMessageLength = BitConverter.GetBytes(convertedMessage.Length);
 
-			using (MemoryStream bufferStream = new MemoryStream(length)) {
-				bufferStream.Append(NetUtils.HashBytes);
-				bufferStream.Append(convertedMessageType);
-				bufferStream.Append(convertedMessageLength);
-				bufferStream.Append(convertedMessage);
+					int length = NetUtils.HashBytes.Length +
+								convertedMessage.Length +
+								convertedMessageType.Length +
+								convertedMessageLength.Length;
 
-				bufferStream.Position = 0;
+					using (MemoryStream bufferStream = new MemoryStream(length)) {
+						bufferStream.Append(NetUtils.HashBytes);
+						bufferStream.Append(convertedMessageType);
+						bufferStream.Append(convertedMessageLength);
+						bufferStream.Append(convertedMessage);
 
-				lock (_writingLock) {
-					SendData(bufferStream.ToArray());
+						bufferStream.Position = 0;
+
+						SendData(bufferStream.ToArray());
+					}
+
 				}
 			}
 		}
@@ -175,7 +234,13 @@ namespace Task3.ShareCode {
 
 			while (_buffer.Length < data.Length) {
 				byte[] buffer = new byte[NetUtils.MaxMessageLength];
-				int receivedLength = _socket.ReceiveFrom(buffer, ref _receiverEndpoint);
+				int receivedLength;
+
+				try {
+					receivedLength = _socket.ReceiveFrom(buffer, ref _receiverEndpoint);
+				} catch (SocketException) {
+					return 0;
+				}
 
 				byte[] fixedBuffer = new byte[receivedLength];
 				Array.Copy(buffer, fixedBuffer, fixedBuffer.Length);

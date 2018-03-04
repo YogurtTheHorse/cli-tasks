@@ -6,13 +6,16 @@ using System.Net.Sockets;
 namespace Task3.ShareCode {
 	public static class NetUtils {
 		// Some coded bytes that will be send before any message
-		public static readonly byte[] HashBytes = new byte[] { 100, 100, 200, 200 };
+		public static readonly byte[] HashBytes = new byte[] { 100, 200, 15, 75 };
 
 		public const int ClientPort = 25500;
 		public const int ServerPort = ClientPort + 1;
 
-		public const int MaxMessageLength = 1024;
+		public static readonly int MaxHeaderLength = HashBytes.Length + 1 + 4;
+		public static readonly int MaxTextLength = 256;
+		public static readonly int MaxMessageLength = MaxMessageLength + MaxTextLength * 4;
 
+		public const string DisconnectStatusMessage = "DISCONNECT";
 
 		public static Socket ConnectToServer(string server, int port) {
 			IPHostEntry hostEntry = Dns.GetHostEntry(server);
