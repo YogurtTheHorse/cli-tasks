@@ -42,6 +42,8 @@ namespace Task1.TasksIO {
 			Thread.Sleep(100);
 		}
 
+		public virtual void Stop() { }
+
 		public bool ReadInteger(string message, out int res) {
 			Write(message);
 

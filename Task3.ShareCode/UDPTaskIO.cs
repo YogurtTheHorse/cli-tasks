@@ -132,7 +132,7 @@ namespace Task3.ShareCode {
 			}
 		}
 
-		public void Stop() {
+		public override void Stop() {
 			Write(NetUtils.DisconnectStatusMessage, NetworkMessageType.Status);
 			IsListening = false;
 		}
