@@ -103,20 +103,14 @@ namespace Task3.ShareCode {
 				lock (_readingLock) {
 					if (_firstFourBytesRecieved) {
 						byte[] recievedBuffer = new byte[1], temp = new byte[_hashBuffer.Length];
-						int bytesRecieved = ReceiveData(recievedBuffer);
-
-						if (bytesRecieved != 1) {
-							continue;
-						}
+						ReceiveData(recievedBuffer);
 
 						// Shifting array and setting last element to recieved byte.
 						Array.Copy(_hashBuffer, 1, temp, 0, temp.Length - 1);
 						temp[temp.Length - 1] = recievedBuffer[0];
 						Array.Copy(temp, _hashBuffer, temp.Length);
 					} else {
-						if (ReceiveData(_hashBuffer) != _hashBuffer.Length) {
-							throw new InvalidOperationException("Couln't read message from socket.");
-						}
+						ReceiveData(_hashBuffer);
 
 						_firstFourBytesRecieved = true;
 					}
@@ -224,7 +218,7 @@ namespace Task3.ShareCode {
 		}
 
 
-		protected int ReceiveData(byte[] data) {
+		protected void ReceiveData(byte[] data) {
 			CheckForConnection();
 
 
@@ -232,11 +226,7 @@ namespace Task3.ShareCode {
 				byte[] buffer = new byte[NetUtils.MaxMessageLength];
 				int receivedLength;
 
-				try {
-					receivedLength = _socket.ReceiveFrom(buffer, ref _receiverEndpoint);
-				} catch (SocketException) {
-					return 0;
-				}
+				receivedLength = _socket.ReceiveFrom(buffer, ref _receiverEndpoint);
 
 				byte[] fixedBuffer = new byte[receivedLength];
 				Array.Copy(buffer, fixedBuffer, fixedBuffer.Length);
@@ -252,8 +242,6 @@ namespace Task3.ShareCode {
 
 			_buffer = new MemoryStream();
 			_buffer.Append(newBuffer);
-
-			return data.Length;
 
 		}
 
