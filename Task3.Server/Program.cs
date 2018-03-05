@@ -20,8 +20,6 @@ namespace Task3.Server {
 			} else {
 				io.WriteLine(res.Error);
 			}
-
-			io.Stop();
 		}
 	}
 }
