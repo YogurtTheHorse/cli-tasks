@@ -12,8 +12,9 @@ namespace Task3.ShareCode {
 		public const int ServerPort = ClientPort + 1;
 
 		public static readonly int MaxHeaderLength = HashBytes.Length + 1 + 4;
-		public static readonly int MaxTextLength = 256;
-		public static readonly int MaxMessageLength = MaxMessageLength + MaxTextLength * 4;
+		public static readonly int MaxDataLength = 2048;
+		public static readonly int MaxTextLength = MaxDataLength / 4;
+		public static readonly int MaxMessageLength = MaxMessageLength + MaxDataLength;
 
 		public const string DisconnectStatusMessage = "DISCONNECT";
 

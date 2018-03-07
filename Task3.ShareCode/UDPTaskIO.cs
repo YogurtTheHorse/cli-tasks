@@ -9,6 +9,8 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Collections.Generic;
+using System.Runtime.Serialization.Formatters.Binary;
+using System.Runtime.Serialization;
 
 namespace Task3.ShareCode {
 	/// <remarks>
@@ -48,8 +50,9 @@ namespace Task3.ShareCode {
 	public class UDPTaskIO : TaskIO {
 		public bool IsListening { get; private set; }
 
-		public event OnIncomingMesaggeEventHandler OnImcomingStatusMessage;
-		public event OnIncomingMesaggeEventHandler OnImcomingTextMessage;
+		public event OnIncomingMesaggeEventHandler OnIncomingStatusMessage;
+		public event OnIncomingMesaggeEventHandler OnIncomingTextMessage;
+		public event OnIncomingObjectEventHandler OnIncomingObject;
 
 		private AutoResetEvent _messagesQueueUpdated;
 		private AutoResetEvent _newConnectionEvent;
@@ -67,6 +70,8 @@ namespace Task3.ShareCode {
 
 		private List<EndPoint> _endpointsToSend;
 		private bool _isServer;
+
+		private IFormatter _objectFormatter;
 
 		/// <summary>
 		/// Stores part of hash if it was delivered in seperated.
@@ -92,6 +97,8 @@ namespace Task3.ShareCode {
 
 			_hashBuffer = new byte[NetUtils.HashBytes.Length];
 			_firstFourBytesRecieved = false;
+
+			_objectFormatter = new BinaryFormatter();
 		}
 
 		public UDPTaskIO(int portToListen) : this(true) {
@@ -163,26 +170,38 @@ namespace Task3.ShareCode {
 			convertedMessage = new byte[BitConverter.ToInt32(convertedMessageLength, 0)];
 			ReceiveData(convertedMessage);
 
-			string message = Encoding.UTF8.GetString(convertedMessage);
 			NetworkMessageType messageType = (NetworkMessageType)convertedMessageType[0];
 
-			var incomingMessageEventArgs = new IncomingMessageEventArgs(message, messageType);
+			if (messageType == NetworkMessageType.BinaryObject) {
+				object receivedObject;
 
-			switch (messageType) {
-				case NetworkMessageType.Status:
-					OnImcomingStatusMessage?.Invoke(this, incomingMessageEventArgs);
+				using (MemoryStream memoryStream = new MemoryStream(convertedMessage)) {
+					memoryStream.Position = 0;
+					receivedObject =_objectFormatter.Deserialize(memoryStream);
+				}
 
-					if (message == NetUtils.DisconnectStatusMessage) {
-						Stop();
-					}
+				OnIncomingObject?.Invoke(this, new IncomingObjectEventArgs(receivedObject));
+			} else {
+				string message = Encoding.UTF8.GetString(convertedMessage);
 
-					break;
-				case NetworkMessageType.Text:
-					_recievedMessages.Enqueue(message);
-					_messagesQueueUpdated.Set();
+				var incomingMessageEventArgs = new IncomingMessageEventArgs(message, messageType);
 
-					OnImcomingTextMessage?.Invoke(this, incomingMessageEventArgs);
-					break;
+				switch (messageType) {
+					case NetworkMessageType.Status:
+						OnIncomingStatusMessage?.Invoke(this, incomingMessageEventArgs);
+
+						if (message == NetUtils.DisconnectStatusMessage) {
+							Stop();
+						}
+
+						break;
+					case NetworkMessageType.Text:
+						_recievedMessages.Enqueue(message);
+						_messagesQueueUpdated.Set();
+
+						OnIncomingTextMessage?.Invoke(this, incomingMessageEventArgs);
+						break;
+				}
 			}
 		}
 
@@ -206,9 +225,25 @@ namespace Task3.ShareCode {
 			Write(s, NetworkMessageType.Text);
 		}
 
+		public void Send(object o) {
+			byte[] bytes;
+
+			using (MemoryStream memoryStream = new MemoryStream()) {
+				_objectFormatter.Serialize(memoryStream, o);
+
+				bytes = memoryStream.ToArray();
+			}
+
+			Write(NetworkMessageType.BinaryObject, bytes);
+		}
+
 		public void Write(string message, NetworkMessageType messageType) {
 			if (messageType == NetworkMessageType.Status && message.Length > NetUtils.MaxTextLength) {
 				throw new InvalidOperationException($"Status message can't be longer that {NetUtils.MaxTextLength}");
+			}
+
+			if (messageType == NetworkMessageType.BinaryObject) {
+				throw new NotSupportedException("Binary object doesn't support");
 			}
 
 			lock (_writingLock) {
@@ -216,28 +251,34 @@ namespace Task3.ShareCode {
 					int partLength = Math.Min(NetUtils.MaxTextLength, message.Length - i);
 					string messagePart = message.Substring(i, partLength);
 
-					byte[]
-						convertedMessageType = new byte[] { (byte)messageType },
-						convertedMessage = Encoding.UTF8.GetBytes(messagePart),
-						convertedMessageLength = BitConverter.GetBytes(convertedMessage.Length);
-
-					int length = NetUtils.HashBytes.Length +
-								convertedMessage.Length +
-								convertedMessageType.Length +
-								convertedMessageLength.Length;
-
-					using (MemoryStream bufferStream = new MemoryStream(length)) {
-						bufferStream.Append(NetUtils.HashBytes);
-						bufferStream.Append(convertedMessageType);
-						bufferStream.Append(convertedMessageLength);
-						bufferStream.Append(convertedMessage);
-
-						bufferStream.Position = 0;
-
-						SendData(bufferStream.ToArray());
-					}
-
+					Write(messageType, Encoding.UTF8.GetBytes(messagePart));
 				}
+			}
+		}
+
+		private void Write(NetworkMessageType messageType, byte[] convertedMessage) {
+			if (convertedMessage.Length > NetUtils.MaxDataLength) {
+				throw new InvalidOperationException("Too long data part");
+			}
+
+			byte[]
+				convertedMessageType = new byte[] { (byte)messageType },
+				convertedMessageLength = BitConverter.GetBytes(convertedMessage.Length);
+
+			int length = NetUtils.HashBytes.Length +
+						convertedMessage.Length +
+						convertedMessageType.Length +
+						convertedMessageLength.Length;
+
+			using (MemoryStream bufferStream = new MemoryStream(length)) {
+				bufferStream.Append(NetUtils.HashBytes);
+				bufferStream.Append(convertedMessageType);
+				bufferStream.Append(convertedMessageLength);
+				bufferStream.Append(convertedMessage);
+
+				bufferStream.Position = 0;
+
+				SendData(bufferStream.ToArray());
 			}
 		}
 
@@ -285,18 +326,28 @@ namespace Task3.ShareCode {
 			if (_isServer && _endpointsToSend.Count == 0) {
 				_newConnectionEvent.WaitOne();
 			}
-			
+
 			lock (_endpointsToSend) {
 				endpointsToSend = new List<EndPoint>(_endpointsToSend);
 			}
 
 			foreach (EndPoint endpoint in endpointsToSend) {
-					_socket.SendTo(data, endpoint);
-				}
+				_socket.SendTo(data, endpoint);
+			}
 		}
 	}
 
+	public delegate void OnIncomingObjectEventHandler(object sender, IncomingObjectEventArgs e);
+
 	public delegate void OnIncomingMesaggeEventHandler(object sender, IncomingMessageEventArgs e);
+
+	public class IncomingObjectEventArgs : EventArgs {
+		public object ReceivedObject { get; }
+
+		public IncomingObjectEventArgs(object o) {
+			ReceivedObject = o;
+		}
+	}
 
 	public class IncomingMessageEventArgs : EventArgs {
 		public string Message { get; }
