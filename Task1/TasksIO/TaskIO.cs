@@ -12,24 +12,33 @@ namespace Task1.TasksIO {
 			Write(message);
 
 			string msg = ReadLine();
+			bool parsed = false;
+			res = BlockState.Incorrect;
 
-			switch (msg.ToLower()) {
-				case "r":
-					res = BlockState.Red;
-					break;
+			while (!parsed) {
+				parsed = true;
+				switch (msg.ToLower()) {
+					case "r":
+						res = BlockState.Red;
+						break;
 
-				case "g":
-					res = BlockState.Green;
-					break;
+					case "g":
+						res = BlockState.Green;
+						break;
 
-				case "y":
-					res = BlockState.Yellow;
-					break;
+					case "y":
+						res = BlockState.Yellow;
+						break;
 
-				default:
-					res = BlockState.Incorrect;
-					WriteLine("Error reading block state");
-					return false;
+					default:
+						parsed = false;
+
+						WriteLine("Error reading block state. Try again");
+						Write(msg);
+
+						msg = ReadLine();
+						break;
+				}
 			}
 
 			return true;
@@ -47,12 +56,14 @@ namespace Task1.TasksIO {
 		public bool ReadInteger(string message, out int res) {
 			Write(message);
 
-			string msg = ReadLine();
+			string msg = null;
 
-			if (!int.TryParse(msg, out res)) {
-				WriteLine("Can't parse number");
-				return false;
-			}
+			do {
+				if (msg != null) {
+					WriteLine("Can't parse number. Try again");
+				}
+				msg = ReadLine();
+			} while (!int.TryParse(msg, out res));
 
 			return true;
 		}

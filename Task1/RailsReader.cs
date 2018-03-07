@@ -13,19 +13,22 @@ namespace Task1 {
         public RailsInfoParseResult ReadRailsInfo() {
             RailsInfo railsInfo = new RailsInfo();
 
-            if (!_taskIO.ReadInteger("Blocks count: ", out int blocksCount)) {
-                return new RailsInfoParseResult() {
-                    Error = "Couldn't read blocks count"
-                };
-            }
+			int blocksCount = 1;
 
-            if (blocksCount <= 0) {
-                return new RailsInfoParseResult() {
-                    Error = "Blocks count must be graeter than zero"
-                };
-            }
+			do {
+				if (blocksCount <= 0) {
+					_taskIO.WriteLine("Blocks count must be greater than 0.");
+				}
 
-            BlockCount = blocksCount;
+				if (!_taskIO.ReadInteger("Blocks count: ", out blocksCount)) {
+					return new RailsInfoParseResult() {
+						Error = "Couldn't read blocks count"
+					};
+				}
+			} while (blocksCount <= 0);
+
+
+			BlockCount = blocksCount;
 
             for (int i = 0; i < blocksCount; ++i) {
                 if (!_taskIO.ReadBlock($"Block {i + 1} state (R/Y/G): ", out BlockState state)) {
