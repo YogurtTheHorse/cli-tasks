@@ -6,7 +6,7 @@ using Task2.Menus;
 namespace Task2 {
     public class Program {
         private static RailsInfo _railsInfo;
-		private static TaskIO _taskIO;
+		private static ITaskIO _taskIO;
         
         public static void Main(string[] args) {
             IRailsSerializer serializer = new JSONRailsSerializer();

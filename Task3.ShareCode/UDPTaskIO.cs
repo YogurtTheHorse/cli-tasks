@@ -47,7 +47,7 @@ namespace Task3.ShareCode {
 	/// |  Data  |     Data     | Speciefed in header    | UTF8 decoded string   |
 	/// * ---------------------------------------------------------------------- *
 	/// </remarks>
-	public class UDPTaskIO : TaskIO {
+	public class UDPTaskIO : BaseTaskIO {
 		public bool IsListening { get; private set; }
 
 		public event OnIncomingMesaggeEventHandler OnIncomingStatusMessage;

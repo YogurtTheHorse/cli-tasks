@@ -6,9 +6,9 @@ namespace Task1.Menu {
 	public class Menu {
 		protected string _menuLabel;
 		protected List<MenuItem> _items;
-		protected TaskIO _taskIO;
+		protected ITaskIO _taskIO;
 
-		public Menu(string menuLabel, TaskIO taskIO) {
+		public Menu(string menuLabel, ITaskIO taskIO) {
 			_menuLabel = menuLabel;
 			_taskIO = taskIO;
 

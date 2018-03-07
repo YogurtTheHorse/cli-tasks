@@ -6,7 +6,7 @@ namespace Task1.Menu {
 	public class FirstTaskMenu : Menu {
 		protected RailsInfo _railsInfo;
 
-		public FirstTaskMenu(TaskIO taskIO, RailsInfo railsInfo) : base("FirstMenuTask", taskIO) {
+		public FirstTaskMenu(ITaskIO taskIO, RailsInfo railsInfo) : base("FirstMenuTask", taskIO) {
 			_taskIO = taskIO;
 			_railsInfo = railsInfo;
 

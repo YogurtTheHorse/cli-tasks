@@ -2,11 +2,11 @@
 
 namespace Task1 {
     public class RailsReader {
-        private TaskIO _taskIO;
+        private ITaskIO _taskIO;
 
         public int BlockCount { get; protected set; }
 
-        public RailsReader(TaskIO taskIO) {
+        public RailsReader(ITaskIO taskIO) {
 			_taskIO = taskIO;
         }
 

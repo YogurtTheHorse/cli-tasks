@@ -8,7 +8,7 @@ namespace Task2.Menus {
     public class SecondTaskMenu : FirstTaskMenu {
         private IRailsSerializer _serializer;
 
-        public SecondTaskMenu(TaskIO taskIO, RailsInfo railsInfo, IRailsSerializer serializer) :
+        public SecondTaskMenu(ITaskIO taskIO, RailsInfo railsInfo, IRailsSerializer serializer) :
             base(taskIO, railsInfo) {
 
             _menuLabel = "SecondTaskMenu";

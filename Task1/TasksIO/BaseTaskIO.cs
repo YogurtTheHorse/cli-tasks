@@ -2,7 +2,7 @@
 using System.Threading;
 
 namespace Task1.TasksIO {
-	public abstract class TaskIO {
+	public abstract class BaseTaskIO : ITaskIO {
 		public abstract string ReadLine();
 		public abstract void Write(string s);
 

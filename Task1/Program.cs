@@ -5,7 +5,7 @@ using Task1.TasksIO;
 namespace Task1 {
     public class Program {
         public static void Main(string[] args) {
-            TaskIO io = new ConsoleTaskIO();
+            ITaskIO io = new ConsoleTaskIO();
             RailsReader railsParser = new RailsReader(io);
             RailsInfoParseResult res = railsParser.ReadRailsInfo();
 
