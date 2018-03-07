@@ -10,7 +10,9 @@ namespace Task3.Server {
 	public class Program {
 		public static void Main(string[] args) {
 			try {
-				TaskIO io = new UDPTaskIO(NetUtils.ServerPort);
+				UDPTaskIO io = new UDPTaskIO(NetUtils.ServerPort);
+
+				io.OnIncomingObject += Io_OnIncomingObject; ;
 
 				io.StartListeningAsync();
 
@@ -32,6 +34,13 @@ namespace Task3.Server {
 					Console.WriteLine($"Network error: {ex.SocketErrorCode}");
 					Console.ReadLine();
 				}
+			}
+		}
+
+		private static void Io_OnIncomingObject(object sender, IncomingObjectEventArgs e) {
+			object o = e.ReceivedObject;
+			if (o is TestClass testObject) {
+				Console.WriteLine(testObject.Test);
 			}
 		}
 	}

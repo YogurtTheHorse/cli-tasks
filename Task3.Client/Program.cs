@@ -15,10 +15,11 @@ namespace Task3.Client {
 
 			try {
 				UDPTaskIO io = new UDPTaskIO(args[0], NetUtils.ClientPort, NetUtils.ServerPort);
-				io.OnImcomingTextMessage += (s, e) => Console.Write(e.Message);
+				io.OnIncomingTextMessage += (s, e) => Console.Write(e.Message);
 
 				io.StartListeningAsync();
 				io.Write("hello", NetworkMessageType.Status);
+				io.Send(new TestClass("hi"));
 
 				while (io.IsListening) {
 					io.WriteLine(Console.ReadLine());
