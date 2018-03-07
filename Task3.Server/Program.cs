@@ -10,7 +10,7 @@ namespace Task3.Server {
 	public class Program {
 		public static void Main(string[] args) {
 			try {
-				TaskIO io = new UDPTaskIO("127.0.0.1", NetUtils.ServerPort, NetUtils.ClientPort);
+				TaskIO io = new UDPTaskIO(NetUtils.ServerPort);
 
 				io.StartListeningAsync();
 

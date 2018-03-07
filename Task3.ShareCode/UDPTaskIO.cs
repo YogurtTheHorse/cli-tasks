@@ -8,6 +8,7 @@ using System.Text;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Collections.Generic;
 
 namespace Task3.ShareCode {
 	/// <remarks>
@@ -51,6 +52,7 @@ namespace Task3.ShareCode {
 		public event OnIncomingMesaggeEventHandler OnImcomingTextMessage;
 
 		private AutoResetEvent _messagesQueueUpdated;
+		private AutoResetEvent _newConnectionEvent;
 
 		private ConcurrentQueue<string> _recievedMessages;
 
@@ -63,6 +65,9 @@ namespace Task3.ShareCode {
 		private EndPoint _receiverEndpoint;
 		private int _portToReceive;
 
+		private List<EndPoint> _endpointsToSend;
+		private bool _isServer;
+
 		/// <summary>
 		/// Stores part of hash if it was delivered in seperated.
 		/// </summary>
@@ -72,20 +77,32 @@ namespace Task3.ShareCode {
 		/// </summary>
 		private bool _firstFourBytesRecieved;
 
-		public UDPTaskIO(string server, int portToReceive, int portToSend) {
-			_portToReceive = portToReceive;
+		protected UDPTaskIO(bool isServer) {
+			_isServer = isServer;
 
-			_receiverEndpoint = new IPEndPoint(IPAddress.Parse(server), portToSend);
 			_socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-
+			_endpointsToSend = new List<EndPoint>();
 
 			_buffer = new MemoryStream();
 
 			_messagesQueueUpdated = new AutoResetEvent(false);
+			_newConnectionEvent = new AutoResetEvent(false);
+
 			_recievedMessages = new ConcurrentQueue<string>();
 
 			_hashBuffer = new byte[NetUtils.HashBytes.Length];
 			_firstFourBytesRecieved = false;
+		}
+
+		public UDPTaskIO(int portToListen) : this(true) {
+			_portToReceive = portToListen;
+		}
+
+		public UDPTaskIO(string server, int portToReceive, int portToSend) : this(false) {
+			_portToReceive = portToReceive;
+
+			_receiverEndpoint = new IPEndPoint(IPAddress.Parse(server), portToSend);
+			_endpointsToSend.Add(_receiverEndpoint);
 		}
 
 		private void CheckForConnection() {
@@ -100,24 +117,32 @@ namespace Task3.ShareCode {
 			IsListening = true;
 
 			while (IsListening) {
-				lock (_readingLock) {
-					if (_firstFourBytesRecieved) {
-						byte[] recievedBuffer = new byte[1], temp = new byte[_hashBuffer.Length];
-						ReceiveData(recievedBuffer);
+				try {
+					ReadIteration();
+				} catch (SocketException) {
+					IsListening = false;
+				}
+			}
+		}
 
-						// Shifting array and setting last element to recieved byte.
-						Array.Copy(_hashBuffer, 1, temp, 0, temp.Length - 1);
-						temp[temp.Length - 1] = recievedBuffer[0];
-						Array.Copy(temp, _hashBuffer, temp.Length);
-					} else {
-						ReceiveData(_hashBuffer);
+		private void ReadIteration() {
+			lock (_readingLock) {
+				if (_firstFourBytesRecieved) {
+					byte[] recievedBuffer = new byte[1], temp = new byte[_hashBuffer.Length];
+					ReceiveData(recievedBuffer);
 
-						_firstFourBytesRecieved = true;
-					}
+					// Shifting array and setting last element to recieved byte.
+					Array.Copy(_hashBuffer, 1, temp, 0, temp.Length - 1);
+					temp[temp.Length - 1] = recievedBuffer[0];
+					Array.Copy(temp, _hashBuffer, temp.Length);
+				} else {
+					ReceiveData(_hashBuffer);
 
-					if (_hashBuffer.SequenceEqual(NetUtils.HashBytes)) {
-						RecieveMessage();
-					}
+					_firstFourBytesRecieved = true;
+				}
+
+				if (_hashBuffer.SequenceEqual(NetUtils.HashBytes)) {
+					RecieveMessage();
 				}
 			}
 		}
@@ -146,11 +171,11 @@ namespace Task3.ShareCode {
 			switch (messageType) {
 				case NetworkMessageType.Status:
 					OnImcomingStatusMessage?.Invoke(this, incomingMessageEventArgs);
-					
+
 					if (message == NetUtils.DisconnectStatusMessage) {
 						Stop();
 					}
-					
+
 					break;
 				case NetworkMessageType.Text:
 					_recievedMessages.Enqueue(message);
@@ -173,7 +198,6 @@ namespace Task3.ShareCode {
 				_recievedMessages.TryDequeue(out string message);
 				lineBuffer += message;
 			}
-
 
 			return lineBuffer.Substring(0, newLineIndex);
 		}
@@ -226,7 +250,16 @@ namespace Task3.ShareCode {
 				byte[] buffer = new byte[NetUtils.MaxMessageLength];
 				int receivedLength;
 
-				receivedLength = _socket.ReceiveFrom(buffer, ref _receiverEndpoint);
+				var receiverEndpoint = _isServer ? new IPEndPoint(IPAddress.Any, _portToReceive) : _receiverEndpoint;
+
+				receivedLength = _socket.ReceiveFrom(buffer, ref receiverEndpoint);
+
+				lock (_endpointsToSend) {
+					if (_isServer && !_endpointsToSend.Contains(receiverEndpoint)) {
+						_endpointsToSend.Add(receiverEndpoint);
+						_newConnectionEvent.Set();
+					}
+				}
 
 				byte[] fixedBuffer = new byte[receivedLength];
 				Array.Copy(buffer, fixedBuffer, fixedBuffer.Length);
@@ -246,9 +279,20 @@ namespace Task3.ShareCode {
 		}
 
 		protected void SendData(byte[] data) {
+			List<EndPoint> endpointsToSend;
 			CheckForConnection();
 
-			_socket.SendTo(data, _receiverEndpoint);
+			if (_isServer && _endpointsToSend.Count == 0) {
+				_newConnectionEvent.WaitOne();
+			}
+			
+			lock (_endpointsToSend) {
+				endpointsToSend = new List<EndPoint>(_endpointsToSend);
+			}
+
+			foreach (EndPoint endpoint in endpointsToSend) {
+					_socket.SendTo(data, endpoint);
+				}
 		}
 	}
 
